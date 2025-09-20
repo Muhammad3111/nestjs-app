@@ -1,8 +1,16 @@
-import { Body, Controller, Post, BadRequestException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Param,
+  BadRequestException,
+  Patch,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { SettingsService } from '../app-setting/settings.service';
 
 @ApiTags('Users')
@@ -17,7 +25,6 @@ export class UsersController {
   @ApiOperation({ summary: 'Register a new user' })
   async register(@Body() dto: RegisterUserDto) {
     const secretKey: string = dto.secretKey;
-    // Build createDto by copying fields except secretKey
     const { username, phone, password, role } = dto;
     const createDto: CreateUserDto = { username, phone, password, role };
 
@@ -25,5 +32,11 @@ export class UsersController {
     if (!ok) throw new BadRequestException('Invalid registration secret key');
 
     return this.usersService.create(createDto);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update user by ID' })
+  async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.usersService.update(id, dto);
   }
 }
