@@ -12,6 +12,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { SettingsService } from '../app-setting/settings.service';
+import { AuthService } from 'src/auth/auth.service';
 
 @ApiTags('Users')
 @Controller('api/users')
@@ -19,6 +20,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly settingsService: SettingsService,
+    private readonly authService: AuthService,
   ) {}
 
   @Post('register')
@@ -31,7 +33,8 @@ export class UsersController {
     const ok = await this.settingsService.verifyRegistrationSecret(secretKey);
     if (!ok) throw new BadRequestException('Invalid registration secret key');
 
-    return this.usersService.create(createDto);
+    const user = await this.usersService.create(createDto);
+    return this.authService.buildAuthResponse(user);
   }
 
   @Patch(':id')

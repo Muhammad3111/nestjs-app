@@ -15,7 +15,11 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: ['https://moneychange.uz', 'https://www.moneychange.uz'],
+    origin: [
+      'https://moneychange.uz',
+      'https://www.moneychange.uz',
+      'http://localhost:4200',
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
