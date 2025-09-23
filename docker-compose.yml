@@ -11,7 +11,7 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/exchangeApp # 🔄 bu yerda app → exchangeApp
       PORT: 3000
     ports:
-      - '3001:3000'
+      - '3001:3003'
   db:
     image: postgres:16-alpine
     environment:
