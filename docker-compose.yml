@@ -8,7 +8,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/app
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/exchangeApp # 🔄 bu yerda app → exchangeApp
       PORT: 3000
     ports:
       - '3001:3000'
@@ -17,7 +17,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: app
+      POSTGRES_DB: exchangeApp # 🔄 bu yerda ham app → exchangeApp
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
