@@ -2,17 +2,17 @@ services:
   app:
     build: .
     depends_on:
-      db:
+      exchangeApp:
         condition: service_healthy
     env_file:
       - .env
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/exchangeApp # 🔄 bu yerda app → exchangeApp
+      DATABASE_URL: postgresql://postgres:postgres@exchangeApp:5432/exchangeApp # 🔄 bu yerda app → exchangeApp
       PORT: 3000
     ports:
       - '3001:3003'
-  db:
+  exchangeApp:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
