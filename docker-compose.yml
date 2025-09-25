@@ -1,32 +1,33 @@
 services:
-  app:
-    build: .
-    depends_on:
-      exchangeApp:
-        condition: service_healthy
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: exchange_app
     env_file:
       - .env
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:postgres@exchangeApp:5432/exchangeApp # 🔄 bu yerda app → exchangeApp
-      PORT: 3000
     ports:
       - '3001:3003'
-  exchangeApp:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: exchangeApp # 🔄 bu yerda ham app → exchangeApp
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    depends_on:
+      exchange_db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  exchange_db:
+    container_name: exchange_db
+    image: ankane/pgvector:latest
+    env_file:
+      - .env
     ports:
       - '5464:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
-      interval: 5s
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
 volumes:
   postgres_data:
