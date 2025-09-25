@@ -17,13 +17,21 @@ export class Order {
   @Column({ nullable: true })
   phone: string;
 
-  @ManyToOne(() => Region, (region) => region.outgoingOrders, { eager: false })
+  @ManyToOne(() => Region, (region) => region.outgoingOrders, {
+    eager: false,
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'from_region_id' })
-  from_region: Region;
+  from_region: Region | null;
 
-  @ManyToOne(() => Region, (region) => region.incomingOrders, { eager: false })
+  @ManyToOne(() => Region, (region) => region.incomingOrders, {
+    eager: false,
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'to_region_id' })
-  to_region: Region;
+  to_region: Region | null;
 
   // UZS
   @Column('numeric', { precision: 18, scale: 2, default: 0 })

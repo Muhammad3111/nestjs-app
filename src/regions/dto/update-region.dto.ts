@@ -4,18 +4,6 @@ import { IsNumber, IsOptional } from 'class-validator';
 import { CreateRegionDto } from './create-region.dto';
 
 export class UpdateRegionDto extends PartialType(CreateRegionDto) {
-  @ApiPropertyOptional({ example: 1500000 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  balanceUzs?: number;
-
-  @ApiPropertyOptional({ example: 500 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  balanceUsd?: number;
-
   @ApiPropertyOptional({ example: 2000000 })
   @IsOptional()
   @Type(() => Number)
@@ -39,4 +27,16 @@ export class UpdateRegionDto extends PartialType(CreateRegionDto) {
   @Type(() => Number)
   @IsNumber()
   balanceExpenseUsd?: number;
+
+  @ApiPropertyOptional({ example: 3000000 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  totalBalanceUzs?: number;
+
+  @ApiPropertyOptional({ example: 1000 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  totalBalanceUsd?: number;
 }

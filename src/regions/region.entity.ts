@@ -16,13 +16,6 @@ export class Region {
   @Column({ unique: true })
   name: string;
 
-  // Umumiy balans (real-time, minus bo‘lishi mumkin)
-  @Column({ type: 'numeric', precision: 18, scale: 2, default: 0 })
-  balanceUzs: number;
-
-  @Column({ type: 'numeric', precision: 18, scale: 2, default: 0 })
-  balanceUsd: number;
-
   // Income balanslari
   @Column({ type: 'numeric', precision: 18, scale: 2, default: 0 })
   balanceIncomeUzs: number;
@@ -36,6 +29,13 @@ export class Region {
 
   @Column({ type: 'numeric', precision: 18, scale: 2, default: 0 })
   balanceExpenseUsd: number;
+
+  // Total balanslari (income - expense)
+  @Column({ type: 'numeric', precision: 18, scale: 2, default: 0 })
+  totalBalanceUzs: number;
+
+  @Column({ type: 'numeric', precision: 18, scale: 2, default: 0 })
+  totalBalanceUsd: number;
 
   @CreateDateColumn() created_at: Date;
   @UpdateDateColumn() updated_at: Date;

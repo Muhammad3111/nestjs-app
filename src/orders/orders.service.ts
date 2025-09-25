@@ -22,6 +22,20 @@ export class OrdersService {
   }
 
   /**
+   * Region uchun totalBalance larni qayta hisoblash
+   * totalBalance = balanceIncome - balanceExpense
+   */
+  private updateRegionTotalBalances(region: Region): void {
+    const incomeUzs = this.nz(region.balanceIncomeUzs);
+    const incomeUsd = this.nz(region.balanceIncomeUsd);
+    const expenseUzs = this.nz(region.balanceExpenseUzs);
+    const expenseUsd = this.nz(region.balanceExpenseUsd);
+
+    region.totalBalanceUzs = incomeUzs - expenseUzs;
+    region.totalBalanceUsd = incomeUsd - expenseUsd;
+  }
+
+  /**
    * Faqat bitta valyuta ishlatilgan bo'lsa flow hisoblaydi:
    * - UZS ishlatilgan (incomeUzs/expenseUzs > 0), USD ishlatilmagan => flowBalanceUzs = incomeUzs - expenseUzs
    * - USD ishlatilgan (incomeUsd/expenseUsd > 0), UZS ishlatilmagan => flowBalanceUsd = incomeUsd - expenseUsd
@@ -81,18 +95,16 @@ export class OrdersService {
       this.nz(fromRegion.balanceExpenseUzs) + this.nz(expenseUzs);
     fromRegion.balanceExpenseUsd =
       this.nz(fromRegion.balanceExpenseUsd) + this.nz(expenseUsd);
-    fromRegion.balanceUzs =
-      this.nz(fromRegion.balanceUzs) - this.nz(expenseUzs);
-    fromRegion.balanceUsd =
-      this.nz(fromRegion.balanceUsd) - this.nz(expenseUsd);
 
     // To region (kirim)
     toRegion.balanceIncomeUzs =
       this.nz(toRegion.balanceIncomeUzs) + this.nz(incomeUzs);
     toRegion.balanceIncomeUsd =
       this.nz(toRegion.balanceIncomeUsd) + this.nz(incomeUsd);
-    toRegion.balanceUzs = this.nz(toRegion.balanceUzs) + this.nz(incomeUzs);
-    toRegion.balanceUsd = this.nz(toRegion.balanceUsd) + this.nz(incomeUsd);
+
+    // Total balance larni yangilash
+    this.updateRegionTotalBalances(fromRegion);
+    this.updateRegionTotalBalances(toRegion);
 
     await this.regionRepo.save([fromRegion, toRegion]);
 
@@ -176,10 +188,127 @@ export class OrdersService {
   async update(id: string, dto: UpdateOrderDto): Promise<Order> {
     const order = await this.orderRepo.findOne({
       where: { id, is_deleted: false },
+      relations: ['from_region', 'to_region'],
     });
     if (!order) throw new NotFoundException('Order not found');
 
-    Object.assign(order, dto);
+    const prevFromRegion = order.from_region;
+    const prevToRegion = order.to_region;
+
+    const prevExpenseUzs = this.nz(order.expenseUzs);
+    const prevExpenseUsd = this.nz(order.expenseUsd);
+    const prevIncomeUzs = this.nz(order.incomeUzs);
+    const prevIncomeUsd = this.nz(order.incomeUsd);
+
+    let nextFromRegion = prevFromRegion;
+    let nextToRegion = prevToRegion;
+
+    if (dto.fromRegionId !== undefined) {
+      if (!dto.fromRegionId) {
+        throw new NotFoundException('From region id is required');
+      }
+      if (prevFromRegion?.id !== dto.fromRegionId) {
+        const region = await this.regionRepo.findOne({
+          where: { id: dto.fromRegionId },
+        });
+        if (!region)
+          throw new NotFoundException(
+            `From region with id ${dto.fromRegionId} not found`,
+          );
+        nextFromRegion = region;
+      }
+    }
+
+    if (dto.toRegionId !== undefined) {
+      if (!dto.toRegionId) {
+        throw new NotFoundException('To region id is required');
+      }
+      if (prevToRegion?.id !== dto.toRegionId) {
+        const region = await this.regionRepo.findOne({
+          where: { id: dto.toRegionId },
+        });
+        if (!region)
+          throw new NotFoundException(
+            `To region with id ${dto.toRegionId} not found`,
+          );
+        nextToRegion = region;
+      }
+    }
+
+    if (prevFromRegion) {
+      prevFromRegion.balanceExpenseUzs =
+        this.nz(prevFromRegion.balanceExpenseUzs) - prevExpenseUzs;
+      prevFromRegion.balanceExpenseUsd =
+        this.nz(prevFromRegion.balanceExpenseUsd) - prevExpenseUsd;
+
+      // Total balance ni yangilash
+      this.updateRegionTotalBalances(prevFromRegion);
+    }
+
+    if (prevToRegion) {
+      prevToRegion.balanceIncomeUzs =
+        this.nz(prevToRegion.balanceIncomeUzs) - prevIncomeUzs;
+      prevToRegion.balanceIncomeUsd =
+        this.nz(prevToRegion.balanceIncomeUsd) - prevIncomeUsd;
+
+      // Total balance ni yangilash
+      this.updateRegionTotalBalances(prevToRegion);
+    }
+
+    if (dto.phone !== undefined) {
+      order.phone = dto.phone;
+    }
+    if (dto.incomeUzs !== undefined) {
+      order.incomeUzs = dto.incomeUzs;
+    }
+    if (dto.expenseUzs !== undefined) {
+      order.expenseUzs = dto.expenseUzs;
+    }
+    if (dto.incomeUsd !== undefined) {
+      order.incomeUsd = dto.incomeUsd;
+    }
+    if (dto.expenseUsd !== undefined) {
+      order.expenseUsd = dto.expenseUsd;
+    }
+
+    order.from_region = nextFromRegion ?? null;
+    order.to_region = nextToRegion ?? null;
+
+    const nextExpenseUzs = this.nz(order.expenseUzs);
+    const nextExpenseUsd = this.nz(order.expenseUsd);
+    const nextIncomeUzs = this.nz(order.incomeUzs);
+    const nextIncomeUsd = this.nz(order.incomeUsd);
+
+    if (nextFromRegion) {
+      nextFromRegion.balanceExpenseUzs =
+        this.nz(nextFromRegion.balanceExpenseUzs) + nextExpenseUzs;
+      nextFromRegion.balanceExpenseUsd =
+        this.nz(nextFromRegion.balanceExpenseUsd) + nextExpenseUsd;
+
+      // Total balance ni yangilash
+      this.updateRegionTotalBalances(nextFromRegion);
+    }
+
+    if (nextToRegion) {
+      nextToRegion.balanceIncomeUzs =
+        this.nz(nextToRegion.balanceIncomeUzs) + nextIncomeUzs;
+      nextToRegion.balanceIncomeUsd =
+        this.nz(nextToRegion.balanceIncomeUsd) + nextIncomeUsd;
+
+      // Total balance ni yangilash
+      this.updateRegionTotalBalances(nextToRegion);
+    }
+
+    const regionsMap = new Map<string, Region>();
+    [prevFromRegion, prevToRegion, nextFromRegion, nextToRegion]
+      .filter((region): region is Region => Boolean(region))
+      .forEach((region) => regionsMap.set(region.id, region));
+
+    const regionsToPersist = Array.from(regionsMap.values());
+    if (regionsToPersist.length) {
+      await this.regionRepo.save(regionsToPersist);
+    }
+
     return this.orderRepo.save(order);
   }
 
@@ -200,10 +329,9 @@ export class OrdersService {
         Number(fromRegion.balanceExpenseUzs) - Number(order.expenseUzs);
       fromRegion.balanceExpenseUsd =
         Number(fromRegion.balanceExpenseUsd) - Number(order.expenseUsd);
-      fromRegion.balanceUzs =
-        Number(fromRegion.balanceUzs) + Number(order.expenseUzs);
-      fromRegion.balanceUsd =
-        Number(fromRegion.balanceUsd) + Number(order.expenseUsd);
+
+      // Total balance ni yangilash
+      this.updateRegionTotalBalances(fromRegion);
     }
 
     if (toRegion) {
@@ -211,10 +339,9 @@ export class OrdersService {
         Number(toRegion.balanceIncomeUzs) - Number(order.incomeUzs);
       toRegion.balanceIncomeUsd =
         Number(toRegion.balanceIncomeUsd) - Number(order.incomeUsd);
-      toRegion.balanceUzs =
-        Number(toRegion.balanceUzs) - Number(order.incomeUzs);
-      toRegion.balanceUsd =
-        Number(toRegion.balanceUsd) - Number(order.incomeUsd);
+
+      // Total balance ni yangilash
+      this.updateRegionTotalBalances(toRegion);
     }
 
     const regionsToUpdate = [fromRegion, toRegion].filter(

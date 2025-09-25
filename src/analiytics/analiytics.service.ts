@@ -35,15 +35,15 @@ export class AnalyticsService {
       const balanceIncomeUsd = Number(region.balanceIncomeUsd ?? 0);
       const balanceExpenseUzs = Number(region.balanceExpenseUzs ?? 0);
       const balanceExpenseUsd = Number(region.balanceExpenseUsd ?? 0);
-      const balanceUzs = Number(region.balanceUzs ?? 0);
-      const balanceUsd = Number(region.balanceUsd ?? 0);
+      const totalRegionBalanceUzs = Number(region.totalBalanceUzs ?? 0);
+      const totalRegionBalanceUsd = Number(region.totalBalanceUsd ?? 0);
 
       totalIncomeUzs += balanceIncomeUzs;
       totalIncomeUsd += balanceIncomeUsd;
       totalExpenseUzs += balanceExpenseUzs;
       totalExpenseUsd += balanceExpenseUsd;
-      totalBalanceUzs += balanceUzs;
-      totalBalanceUsd += balanceUsd;
+      totalBalanceUzs += totalRegionBalanceUzs;
+      totalBalanceUsd += totalRegionBalanceUsd;
     });
 
     orders.forEach((order) => {
