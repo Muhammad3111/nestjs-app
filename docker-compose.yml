@@ -13,18 +13,18 @@ services:
     depends_on:
       - exchange_db
     # wait for postgres, run migrations (if you have), then start app
-    command: >
-      sh -c "until pg_isready -h exchange_db -p 5432 -U ${POSTGRES_USER}; do
-               echo 'Waiting for Postgres...';
-               sleep 1;
-             done;
-             # run migrations if you have (uncomment if exists)
-             if [ -x \"./node_modules/.bin/typeorm\" ] || npm run | grep -q migrate; then
-               echo 'Running migrations...';
-               npm run migrate || true;
-             fi;
-             echo 'Starting app...';
-             npm run start:prod"
+    # command: >
+    #   sh -c "until pg_isready -h exchange_db -p 5432 -U ${POSTGRES_USER}; do
+    #            echo 'Waiting for Postgres...';
+    #            sleep 1;
+    #          done;
+    #          # run migrations if you have (uncomment if exists)
+    #          if [ -x \"./node_modules/.bin/typeorm\" ] || npm run | grep -q migrate; then
+    #            echo 'Running migrations...';
+    #            npm run migrate || true;
+    #          fi;
+    #          echo 'Starting app...';
+    #          npm run start:prod"
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:3000/health || exit 1']
       interval: 10s
