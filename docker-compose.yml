@@ -43,12 +43,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro # optional
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER}']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+    # healthcheck:
+    #   test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER}']
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 10s
     restart: unless-stopped
 
 volumes:
