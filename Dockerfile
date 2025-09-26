@@ -1,29 +1,29 @@
-# syntax=docker/dockerfile:1
-
-FROM node:20-alpine AS deps
-WORKDIR /app
-
-# Install dependencies
-COPY package.json package-lock.json ./
-RUN npm ci
-
+# ---- build stage ----
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+# copy lock + manifest and install (cached)
+COPY package*.json ./
+RUN npm ci
 
+# copy source and build to /app/dist
+COPY . .
 RUN npm run build
 
-FROM node:20-alpine AS runner
+# ---- production stage ----
+FROM node:20-alpine
 WORKDIR /app
-
 ENV NODE_ENV=production
+ENV PORT=3000
 
-COPY package.json package-lock.json ./
-COPY --from=deps /app/node_modules ./node_modules
+# only install production deps
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# copy built output from builder
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["node", "dist/main"]
+# adjust path if your compiled entry file is different
+CMD ["node", "dist/main.js"]
