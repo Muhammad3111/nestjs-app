@@ -6,11 +6,13 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { RegionsService } from './regions.service';
 import { CreateRegionDto } from './dto/create-region.dto';
 import { UpdateRegionDto } from './dto/update-region.dto';
+import { PaginationQueryDto } from '../orders/dto/pagination-query.dto';
 
 @ApiTags('Regions')
 @ApiBearerAuth()
@@ -25,9 +27,9 @@ export class RegionsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all regions (with orders)' })
-  findAll() {
-    return this.regionsService.findAll();
+  @ApiOperation({ summary: 'Get paginated list of regions (with orders)' })
+  findAll(@Query() query: PaginationQueryDto) {
+    return this.regionsService.findAllPaginated(query);
   }
 
   @Get(':id')

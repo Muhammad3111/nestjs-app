@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Region } from './region.entity';
 import { CreateRegionDto } from './dto/create-region.dto';
 import { UpdateRegionDto } from './dto/update-region.dto';
+import { PaginationQueryDto } from '../orders/dto/pagination-query.dto';
 
 @Injectable()
 export class RegionsService {
@@ -67,6 +68,33 @@ export class RegionsService {
     return this.regionRepo.find({
       relations: ['outgoingOrders', 'incomingOrders'],
     });
+  }
+
+  async findAllPaginated(query: PaginationQueryDto) {
+    const { page, limit, search } = query;
+
+    const qb = this.regionRepo
+      .createQueryBuilder('region')
+      .leftJoinAndSelect('region.outgoingOrders', 'outgoingOrders')
+      .leftJoinAndSelect('region.incomingOrders', 'incomingOrders');
+
+    if (search) {
+      qb.andWhere('region.name ILIKE :search', { search: `%${search}%` });
+    }
+
+    qb.skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('region.name', 'ASC');
+
+    const [items, total] = await qb.getManyAndCount();
+
+    return {
+      data: items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findOne(id: string): Promise<Region> {
