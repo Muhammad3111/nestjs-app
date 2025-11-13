@@ -65,18 +65,13 @@ export class RegionsService {
   }
 
   async findAll(): Promise<Region[]> {
-    return this.regionRepo.find({
-      relations: ['outgoingOrders', 'incomingOrders'],
-    });
+    return this.regionRepo.find();
   }
 
   async findAllPaginated(query: PaginationQueryDto) {
     const { page, limit, search } = query;
 
-    const qb = this.regionRepo
-      .createQueryBuilder('region')
-      .leftJoinAndSelect('region.outgoingOrders', 'outgoingOrders')
-      .leftJoinAndSelect('region.incomingOrders', 'incomingOrders');
+    const qb = this.regionRepo.createQueryBuilder('region');
 
     if (search) {
       qb.andWhere('region.name ILIKE :search', { search: `%${search}%` });
@@ -100,7 +95,6 @@ export class RegionsService {
   async findOne(id: string): Promise<Region> {
     const region = await this.regionRepo.findOne({
       where: { id },
-      relations: ['outgoingOrders', 'incomingOrders'],
     });
     if (!region) throw new NotFoundException('Region not found');
     return region;
