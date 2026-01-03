@@ -52,7 +52,7 @@ export class AuthService {
   async refresh(refresh_token: string) {
     try {
       const payload = this.jwtService.verify<JwtPayload>(refresh_token, {
-        secret: process.env.JWT_SECRET || 'secretKey',
+        secret: process.env.MONEYCHANGE_JWT_SECRET || 'secretKey',
       });
 
       const user = await this.usersService.findById(payload.sub);

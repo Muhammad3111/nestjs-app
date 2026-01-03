@@ -18,7 +18,7 @@ import { CleanupModule } from './cleanup/cleanup.module';
     TypeOrmModule.forRootAsync({
       useFactory: () => ({
         type: 'postgres',
-        url: process.env.DATABASE_URL,
+        url: process.env.MONEYCHANGE_DB_URL,
         autoLoadEntities: true,
         synchronize: true,
       }),
