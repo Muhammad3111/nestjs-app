@@ -19,7 +19,7 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     optionsSuccessStatus: 204,
-    credintial: true,
+    credintials: true,
   });
   // Swagger Config
   const config = new DocumentBuilder()
