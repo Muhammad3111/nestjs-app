@@ -15,13 +15,11 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: [
-      'https://moneychange.uz',
-      'https://www.moneychange.uz',
-      'http://localhost:4200',
-    ],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
+    origin: ['https://moneychange.uz', 'https://www.moneychange.uz'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 204,
+    credintial: true,
   });
   // Swagger Config
   const config = new DocumentBuilder()
