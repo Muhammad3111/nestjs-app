@@ -15,12 +15,16 @@ ENV PORT=3000
 # install pg_isready (postgres client) so the compose wait-loop works
 RUN apk add --no-cache postgresql-client
 
-# only install production deps
+# install all dependencies (needed for migrations with ts-node)
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci --only=production
 
 # copy built output from builder
 COPY --from=builder /app/dist ./dist
+
+# copy source files and tsconfig for migrations
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
