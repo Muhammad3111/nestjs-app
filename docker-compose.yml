@@ -1,4 +1,21 @@
 services:
+  moneychange_migration:
+    container_name: moneychange_migration
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    command: npm run migration:run
+    depends_on:
+      moneychange_db:
+        condition: service_healthy
+    networks:
+      - moneychange_net
+    restart: 'no'
+
   moneychange_api:
     container_name: moneychange_api
     build:
@@ -6,11 +23,15 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
+    environment:
+      - NODE_ENV=production
     ports:
       - '3001:3000' # HOST:CONTAINER
     depends_on:
       moneychange_db:
         condition: service_healthy
+      moneychange_migration:
+        condition: service_completed_successfully
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:3000/health || exit 1']
       interval: 10s

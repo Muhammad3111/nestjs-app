@@ -23,26 +23,82 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+**MoneyChange API** - A comprehensive NestJS-based REST API for managing money exchange operations, orders, regions, and analytics.
 
-## Project setup
+### Features
+
+- 🔐 **JWT Authentication** - Secure login with access & refresh tokens
+- 👥 **User Management** - Complete CRUD operations with role-based access
+- 📦 **Order Management** - Track UZS & USD transactions with flow balances
+- 🌍 **Region Management** - Multi-region support with balance tracking
+- 📊 **Analytics** - Real-time global statistics and insights
+- 🗄️ **PostgreSQL** - Robust database with TypeORM
+- 🐳 **Docker Support** - Easy deployment with Docker Compose
+- 🔄 **Database Migrations** - Version-controlled schema changes
+- 📝 **API Documentation** - Complete endpoint documentation in JSON format
+
+## 📚 Documentation
+
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete production deployment guide
+- **[API-COMPLETE.json](./API-COMPLETE.json)** - Full API documentation with examples
+- **[OPTIMIZATIONS.md](./OPTIMIZATIONS.md)** - Performance optimizations applied
+- **[README.deployment.md](./README.deployment.md)** - Deployment configuration details
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18.x or higher
+- PostgreSQL 14.x or higher
+- Docker & Docker Compose (optional)
+
+### Installation
 
 ```bash
-$ npm install
+# Clone repository
+git clone https://github.com/your-username/nestjs-app.git
+cd nestjs-app
+
+# Install dependencies
+npm install
+
+# Setup environment
+cp .env.example .env
+# Edit .env with your configuration
 ```
 
-## Compile and run the project
+## 🏃 Running the Application
+
+### Option 1: Docker (Recommended)
 
 ```bash
-# development
-$ npm run start
+# Start all services (API + PostgreSQL)
+docker-compose -f docker-compose.dev.yml up
 
-# watch mode
-$ npm run start:dev
+# Run migrations
+docker-compose -f docker-compose.dev.yml run --rm migrations
 
-# production mode
-$ npm run start:prod
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f api
 ```
+
+### Option 2: Local Development
+
+```bash
+# Start PostgreSQL (ensure it's running)
+
+# Run migrations
+npm run migration:run
+
+# Start in development mode
+npm run start:dev
+
+# Start in production mode
+npm run build
+npm run start:prod
+```
+
+API will be available at: `http://localhost:3001`
 
 ## Run tests
 
@@ -57,41 +113,147 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Deployment
+## 🚀 Production Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+For complete production deployment instructions, see **[DEPLOYMENT.md](./DEPLOYMENT.md)**
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Quick Deploy with Docker
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# 1. Setup environment
+cp .env.production.example .env
+# Edit .env with production values
+
+# 2. Build and deploy
+docker-compose build
+docker-compose run --rm migrations
+docker-compose up -d
+
+# 3. Verify
+curl http://localhost:3001/api/analytics/global
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Environment Variables
 
-## Resources
+Required environment variables:
 
-Check out a few resources that may come in handy when working with NestJS:
+- `NODE_ENV` - Environment (development/production)
+- `PORT` - API port (default: 3001)
+- `MONEYCHANGE_DB_URL` - PostgreSQL connection string
+- `MONEYCHANGE_JWT_SECRET` - JWT signing secret (64+ chars)
+- `REGISTRATION_SECRET_DEFAULT` - User registration secret
+- `ALLOWED_ORIGINS` - CORS allowed origins (comma-separated)
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+See `.env.example` for development and `.env.production.example` for production.
 
-## Support
+## 📡 API Endpoints
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Authentication
 
-## Stay in touch
+- `POST /auth/login` - User login
+- `GET /auth/me` - Get current user
+- `POST /auth/refresh` - Refresh tokens
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Users
+
+- `POST /api/users/register` - Register new user
+- `GET /api/users` - Get all users (paginated)
+- `GET /api/users/:id` - Get user by ID
+- `PATCH /api/users/:id` - Update user
+- `DELETE /api/users/:id` - Delete user
+
+### Orders
+
+- `POST /api/orders` - Create order
+- `GET /api/orders` - Get all orders (paginated)
+- `GET /api/orders/:id` - Get order by ID
+- `PUT /api/orders/:id` - Update order
+- `DELETE /api/orders/:id` - Delete order
+
+### Regions
+
+- `POST /api/regions` - Create region
+- `GET /api/regions` - Get all regions (paginated)
+- `GET /api/regions/:id` - Get region by ID
+- `PUT /api/regions/:id` - Update region
+- `DELETE /api/regions/:id` - Delete region
+
+### Analytics
+
+- `GET /api/analytics/global` - Get global statistics
+
+For detailed API documentation with request/response examples, see **[API-COMPLETE.json](./API-COMPLETE.json)**
+
+## 🗄️ Database Migrations
+
+```bash
+# Generate new migration
+npm run migration:generate -- src/migrations/MigrationName
+
+# Run migrations
+npm run migration:run
+
+# Revert last migration
+npm run migration:revert
+
+# Show migration status
+npm run migration:show
+```
+
+## 🧪 Testing
+
+```bash
+# Unit tests
+npm run test
+
+# E2E tests
+npm run test:e2e
+
+# Test coverage
+npm run test:cov
+```
+
+## 🔒 Security
+
+- JWT-based authentication with access & refresh tokens
+- Password hashing with bcrypt
+- Role-based access control (admin/user)
+- CORS configuration for allowed origins
+- Environment-based configuration
+- SQL injection protection via TypeORM
+
+## 📊 Tech Stack
+
+- **Framework:** NestJS 10.x
+- **Language:** TypeScript 5.x
+- **Database:** PostgreSQL 14.x
+- **ORM:** TypeORM 0.3.x
+- **Authentication:** JWT (jsonwebtoken)
+- **Validation:** class-validator, class-transformer
+- **Documentation:** Swagger/OpenAPI
+- **Containerization:** Docker & Docker Compose
+
+## 📝 Project Structure
+
+```
+src/
+├── auth/           # Authentication module
+├── users/          # User management
+├── orders/         # Order management
+├── regions/        # Region management
+├── analiytics/     # Analytics module
+├── common/         # Shared utilities
+├── config/         # Configuration files
+└── migrations/     # Database migrations
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 

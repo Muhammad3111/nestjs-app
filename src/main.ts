@@ -14,12 +14,20 @@ async function bootstrap() {
       },
     }),
   );
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : [
+        'http://localhost:4200',
+        'https://moneychange.uz',
+        'https://www.moneychange.uz',
+      ];
+
   app.enableCors({
-    origin: ['https://moneychange.uz', 'https://www.moneychange.uz'],
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
     optionsSuccessStatus: 204,
-    credintials: true,
   });
   // Swagger Config
   const config = new DocumentBuilder()

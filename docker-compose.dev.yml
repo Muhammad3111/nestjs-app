@@ -1,0 +1,48 @@
+services:
+  moneychange_api:
+    container_name: moneychange_api_dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      moneychange_db:
+        condition: service_healthy
+    command: npm run start:dev
+    restart: unless-stopped
+    networks:
+      - moneychange_net
+
+  moneychange_db:
+    container_name: moneychange_db_dev
+    image: ankane/pgvector:latest
+    env_file:
+      - .env
+    ports:
+      - '5432:5432'
+    volumes:
+      - moneychange_pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - moneychange_net
+
+volumes:
+  moneychange_pgdata_dev:
+
+networks:
+  moneychange_net:
+    driver: bridge

@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { LoginUserDto } from '../users/dto/login-user.dto';
@@ -17,6 +18,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   async validateUser(phone: string, password: string): Promise<User> {
@@ -51,8 +53,10 @@ export class AuthService {
 
   async refresh(refresh_token: string) {
     try {
+      const secret =
+        this.configService.get<string>('MONEYCHANGE_JWT_SECRET') || 'secretKey';
       const payload = this.jwtService.verify<JwtPayload>(refresh_token, {
-        secret: process.env.MONEYCHANGE_JWT_SECRET || 'secretKey',
+        secret,
       });
 
       const user = await this.usersService.findById(payload.sub);

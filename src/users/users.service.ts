@@ -35,6 +35,12 @@ export class UsersService {
     return this.usersRepo.findOne({ where: { id } });
   }
 
+  async findAll(): Promise<User[]> {
+    return this.usersRepo.find({
+      select: ['id', 'username', 'phone', 'role', 'created_at', 'updated_at'],
+    });
+  }
+
   async update(id: string, dto: UpdateUserDto): Promise<User> {
     const user = await this.usersRepo.findOne({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
@@ -58,5 +64,13 @@ export class UsersService {
 
     Object.assign(user, dto);
     return this.usersRepo.save(user);
+  }
+
+  async remove(id: string): Promise<{ deleted: boolean }> {
+    const user = await this.usersRepo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+
+    await this.usersRepo.remove(user);
+    return { deleted: true };
   }
 }

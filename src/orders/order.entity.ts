@@ -6,14 +6,18 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Region } from '../regions/region.entity';
 
 @Entity('orders')
+@Index(['created_at'])
+@Index(['is_deleted'])
 export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Index()
   @Column({ nullable: true })
   phone: string;
 

@@ -1,0 +1,698 @@
+{
+  "apiInfo": {
+    "title": "MoneyChange Exchange API",
+    "version": "1.0",
+    "description": "NestJS backend for exchange application with regions, currencies, balances and orders management",
+    "baseUrl": {
+      "development": "http://localhost:3001",
+      "production": "https://moneychange.uz"
+    },
+    "documentation": {
+      "swagger": "/api/docs"
+    }
+  },
+  "authentication": {
+    "type": "JWT Bearer Token",
+    "tokenExpiry": {
+      "access_token": "15 minutes",
+      "refresh_token": "7 days"
+    },
+    "headerFormat": "Authorization: Bearer {access_token}",
+    "endpoints": {
+      "login": {
+        "method": "POST",
+        "path": "/auth/login",
+        "requiresAuth": false,
+        "description": "Login va JWT tokenlar olish",
+        "requestBody": {
+          "phone": "string (required) - +998901234567",
+          "password": "string (required)"
+        },
+        "responseExample": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        },
+        "errors": {
+          "401": "Invalid credentials"
+        }
+      },
+      "me": {
+        "method": "GET",
+        "path": "/auth/me",
+        "requiresAuth": true,
+        "description": "Joriy foydalanuvchi ma'lumotlarini olish",
+        "headers": {
+          "Authorization": "Bearer {access_token}"
+        },
+        "responseExample": {
+          "id": "uuid",
+          "username": "admin_user",
+          "phone": "+998901234567",
+          "role": "admin",
+          "created_at": "2024-01-01T00:00:00.000Z",
+          "updated_at": "2024-01-01T00:00:00.000Z",
+          "secretKey": "registration-secret-key"
+        },
+        "errors": {
+          "401": "Unauthorized - Invalid or expired token"
+        }
+      },
+      "refresh": {
+        "method": "POST",
+        "path": "/auth/refresh",
+        "requiresAuth": false,
+        "description": "Refresh token yordamida yangi tokenlar olish",
+        "requestBody": {
+          "refresh_token": "string (required)"
+        },
+        "responseExample": {
+          "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        },
+        "errors": {
+          "401": "Invalid or expired refresh token"
+        }
+      }
+    }
+  },
+  "modules": {
+    "users": {
+      "basePath": "/api/users",
+      "description": "Foydalanuvchilarni boshqarish",
+      "endpoints": {
+        "register": {
+          "method": "POST",
+          "path": "/api/users/register",
+          "requiresAuth": false,
+          "description": "Yangi foydalanuvchi ro'yxatdan o'tkazish",
+          "requestBody": {
+            "username": "string (required) - Unique username",
+            "phone": "string (required) - Unique phone +998901234567",
+            "password": "string (required) - Min 6 characters",
+            "role": "string (required) - 'admin' | 'operator' | 'user'",
+            "secretKey": "string (required) - REGISTRATION_SECRET_DEFAULT"
+          },
+          "responseExample": {
+            "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "user": {
+              "id": "uuid",
+              "username": "john_doe",
+              "phone": "+998901234567",
+              "role": "user",
+              "created_at": "2024-01-18T06:00:00.000Z",
+              "updated_at": "2024-01-18T06:00:00.000Z"
+            }
+          },
+          "errors": {
+            "400": "Invalid registration secret key",
+            "409": "Phone or username already exists"
+          }
+        },
+        "getAll": {
+          "method": "GET",
+          "path": "/api/users",
+          "requiresAuth": true,
+          "description": "Barcha foydalanuvchilarni olish (password excluded)",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "responseExample": [
+            {
+              "id": "uuid-1",
+              "username": "admin_user",
+              "phone": "+998901111111",
+              "role": "admin",
+              "created_at": "2024-01-01T00:00:00.000Z",
+              "updated_at": "2024-01-01T00:00:00.000Z"
+            },
+            {
+              "id": "uuid-2",
+              "username": "operator_user",
+              "phone": "+998902222222",
+              "role": "operator",
+              "created_at": "2024-01-02T00:00:00.000Z",
+              "updated_at": "2024-01-02T00:00:00.000Z"
+            }
+          ],
+          "errors": {
+            "401": "Unauthorized - Token required"
+          }
+        },
+        "getOne": {
+          "method": "GET",
+          "path": "/api/users/:id",
+          "requiresAuth": true,
+          "description": "Bitta foydalanuvchini ID bo'yicha olish",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "urlParams": {
+            "id": "string (uuid) - User ID"
+          },
+          "responseExample": {
+            "id": "uuid",
+            "username": "john_doe",
+            "phone": "+998901234567",
+            "role": "user",
+            "created_at": "2024-01-18T06:00:00.000Z",
+            "updated_at": "2024-01-18T06:00:00.000Z"
+          },
+          "errors": {
+            "401": "Unauthorized - Token required",
+            "404": "User not found"
+          }
+        },
+        "update": {
+          "method": "PATCH",
+          "path": "/api/users/:id",
+          "requiresAuth": true,
+          "description": "Foydalanuvchini yangilash",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "urlParams": {
+            "id": "string (uuid) - User ID"
+          },
+          "requestBody": {
+            "username": "string (optional)",
+            "phone": "string (optional)",
+            "password": "string (optional)",
+            "role": "string (optional) - 'admin' | 'operator' | 'user'"
+          },
+          "responseExample": {
+            "id": "uuid",
+            "username": "updated_username",
+            "phone": "+998909999999",
+            "role": "operator",
+            "created_at": "2024-01-18T06:00:00.000Z",
+            "updated_at": "2024-01-18T07:00:00.000Z"
+          },
+          "errors": {
+            "401": "Unauthorized - Token required",
+            "404": "User not found",
+            "409": "Phone or username already taken"
+          }
+        },
+        "delete": {
+          "method": "DELETE",
+          "path": "/api/users/:id",
+          "requiresAuth": true,
+          "description": "Foydalanuvchini o'chirish",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "urlParams": {
+            "id": "string (uuid) - User ID"
+          },
+          "responseExample": {
+            "deleted": true
+          },
+          "errors": {
+            "401": "Unauthorized - Token required",
+            "404": "User not found"
+          }
+        }
+      }
+    },
+    "orders": {
+      "basePath": "/api/orders",
+      "description": "Buyurtmalarni boshqarish (UZS va USD)",
+      "requiresAuth": true,
+      "endpoints": {
+        "create": {
+          "method": "POST",
+          "path": "/api/orders",
+          "requiresAuth": true,
+          "description": "Yangi buyurtma yaratish (UZS yoki USD)",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "requestBody": {
+            "phone": "string (optional) - Mijoz telefoni",
+            "currency": "string (required) - 'UZS' | 'USD'",
+            "amount": "number (required) - Miqdor",
+            "is_income": "boolean (required) - true: kirim, false: chiqim",
+            "region_id": "string (uuid, required) - Region ID"
+          },
+          "responseExample": {
+            "id": "uuid",
+            "phone": "+998901234567",
+            "currency": "USD",
+            "amount": 1000,
+            "is_income": true,
+            "is_deleted": false,
+            "region_id": "region-uuid",
+            "created_at": "2024-01-18T06:00:00.000Z",
+            "updated_at": "2024-01-18T06:00:00.000Z",
+            "region": {
+              "id": "region-uuid",
+              "name": "Tashkent"
+            }
+          },
+          "errors": {
+            "401": "Unauthorized",
+            "404": "Region not found"
+          }
+        },
+        "getAll": {
+          "method": "GET",
+          "path": "/api/orders",
+          "requiresAuth": true,
+          "description": "Barcha buyurtmalarni pagination bilan olish",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "queryParams": {
+            "page": "number (optional, default: 1)",
+            "limit": "number (optional, default: 10)"
+          },
+          "responseExample": {
+            "data": [
+              {
+                "id": "uuid",
+                "phone": "+998901234567",
+                "currency": "USD",
+                "amount": 1000,
+                "is_income": true,
+                "is_deleted": false,
+                "region_id": "region-uuid",
+                "created_at": "2024-01-18T06:00:00.000Z",
+                "updated_at": "2024-01-18T06:00:00.000Z",
+                "region": {
+                  "id": "region-uuid",
+                  "name": "Tashkent"
+                }
+              }
+            ],
+            "meta": {
+              "total": 100,
+              "page": 1,
+              "limit": 10,
+              "totalPages": 10
+            }
+          },
+          "errors": {
+            "401": "Unauthorized"
+          }
+        },
+        "getOne": {
+          "method": "GET",
+          "path": "/api/orders/:id",
+          "requiresAuth": true,
+          "description": "Bitta buyurtmani ID bo'yicha olish (flow balance bilan)",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "urlParams": {
+            "id": "string (uuid) - Order ID"
+          },
+          "responseExample": {
+            "id": "uuid",
+            "phone": "+998901234567",
+            "currency": "USD",
+            "amount": 1000,
+            "is_income": true,
+            "is_deleted": false,
+            "region_id": "region-uuid",
+            "created_at": "2024-01-18T06:00:00.000Z",
+            "updated_at": "2024-01-18T06:00:00.000Z",
+            "region": {
+              "id": "region-uuid",
+              "name": "Tashkent",
+              "balance_uzs": 5000000,
+              "balance_usd": 10000
+            }
+          },
+          "errors": {
+            "401": "Unauthorized",
+            "404": "Order not found"
+          }
+        },
+        "update": {
+          "method": "PUT",
+          "path": "/api/orders/:id",
+          "requiresAuth": true,
+          "description": "Buyurtmani yangilash",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "urlParams": {
+            "id": "string (uuid) - Order ID"
+          },
+          "requestBody": {
+            "phone": "string (optional)",
+            "currency": "string (optional) - 'UZS' | 'USD'",
+            "amount": "number (optional)",
+            "is_income": "boolean (optional)",
+            "region_id": "string (uuid, optional)"
+          },
+          "responseExample": {
+            "id": "uuid",
+            "phone": "+998909999999",
+            "currency": "UZS",
+            "amount": 500000,
+            "is_income": false,
+            "is_deleted": false,
+            "region_id": "region-uuid",
+            "created_at": "2024-01-18T06:00:00.000Z",
+            "updated_at": "2024-01-18T07:00:00.000Z"
+          },
+          "errors": {
+            "401": "Unauthorized",
+            "404": "Order or Region not found"
+          }
+        },
+        "delete": {
+          "method": "DELETE",
+          "path": "/api/orders/:id",
+          "requiresAuth": true,
+          "description": "Buyurtmani soft delete qilish (is_deleted = true)",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "urlParams": {
+            "id": "string (uuid) - Order ID"
+          },
+          "responseExample": {
+            "id": "uuid",
+            "is_deleted": true,
+            "updated_at": "2024-01-18T07:00:00.000Z"
+          },
+          "errors": {
+            "401": "Unauthorized",
+            "404": "Order not found"
+          }
+        }
+      }
+    },
+    "regions": {
+      "basePath": "/api/regions",
+      "description": "Regionlarni boshqarish (balanslar bilan)",
+      "requiresAuth": true,
+      "endpoints": {
+        "create": {
+          "method": "POST",
+          "path": "/api/regions",
+          "requiresAuth": true,
+          "description": "Yangi region yaratish (default balances = 0)",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "requestBody": {
+            "name": "string (required) - Unique region nomi"
+          },
+          "responseExample": {
+            "id": "uuid",
+            "name": "Samarkand",
+            "balance_uzs": 0,
+            "balance_usd": 0,
+            "created_at": "2024-01-18T06:00:00.000Z",
+            "updated_at": "2024-01-18T06:00:00.000Z"
+          },
+          "errors": {
+            "401": "Unauthorized",
+            "409": "Region name already exists"
+          }
+        },
+        "getAll": {
+          "method": "GET",
+          "path": "/api/regions",
+          "requiresAuth": true,
+          "description": "Barcha regionlarni pagination bilan olish (orders bilan)",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "queryParams": {
+            "page": "number (optional, default: 1)",
+            "limit": "number (optional, default: 10)"
+          },
+          "responseExample": {
+            "data": [
+              {
+                "id": "uuid",
+                "name": "Tashkent",
+                "balance_uzs": 5000000,
+                "balance_usd": 10000,
+                "created_at": "2024-01-01T00:00:00.000Z",
+                "updated_at": "2024-01-18T06:00:00.000Z",
+                "orders": [
+                  {
+                    "id": "order-uuid",
+                    "currency": "USD",
+                    "amount": 1000,
+                    "is_income": true
+                  }
+                ]
+              }
+            ],
+            "meta": {
+              "total": 20,
+              "page": 1,
+              "limit": 10,
+              "totalPages": 2
+            }
+          },
+          "errors": {
+            "401": "Unauthorized"
+          }
+        },
+        "getOne": {
+          "method": "GET",
+          "path": "/api/regions/:id",
+          "requiresAuth": true,
+          "description": "Bitta regionni ID bo'yicha olish (orders bilan)",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "urlParams": {
+            "id": "string (uuid) - Region ID"
+          },
+          "responseExample": {
+            "id": "uuid",
+            "name": "Tashkent",
+            "balance_uzs": 5000000,
+            "balance_usd": 10000,
+            "created_at": "2024-01-01T00:00:00.000Z",
+            "updated_at": "2024-01-18T06:00:00.000Z",
+            "orders": [
+              {
+                "id": "order-uuid",
+                "phone": "+998901234567",
+                "currency": "USD",
+                "amount": 1000,
+                "is_income": true,
+                "created_at": "2024-01-18T06:00:00.000Z"
+              }
+            ]
+          },
+          "errors": {
+            "401": "Unauthorized",
+            "404": "Region not found"
+          }
+        },
+        "update": {
+          "method": "PUT",
+          "path": "/api/regions/:id",
+          "requiresAuth": true,
+          "description": "Regionni yangilash (faqat name)",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "urlParams": {
+            "id": "string (uuid) - Region ID"
+          },
+          "requestBody": {
+            "name": "string (required) - Yangi unique nom"
+          },
+          "responseExample": {
+            "id": "uuid",
+            "name": "New Tashkent",
+            "balance_uzs": 5000000,
+            "balance_usd": 10000,
+            "created_at": "2024-01-01T00:00:00.000Z",
+            "updated_at": "2024-01-18T07:00:00.000Z"
+          },
+          "errors": {
+            "401": "Unauthorized",
+            "404": "Region not found",
+            "409": "Region name already exists"
+          }
+        },
+        "delete": {
+          "method": "DELETE",
+          "path": "/api/regions/:id",
+          "requiresAuth": true,
+          "description": "Regionni o'chirish",
+          "headers": {
+            "Authorization": "Bearer {access_token}"
+          },
+          "urlParams": {
+            "id": "string (uuid) - Region ID"
+          },
+          "responseExample": {
+            "deleted": true
+          },
+          "errors": {
+            "401": "Unauthorized",
+            "404": "Region not found"
+          }
+        }
+      }
+    },
+    "analytics": {
+      "basePath": "/api/analytics",
+      "description": "Global statistika va hisobotlar",
+      "requiresAuth": false,
+      "endpoints": {
+        "global": {
+          "method": "GET",
+          "path": "/api/analytics/global",
+          "requiresAuth": false,
+          "description": "Global statistika (kirim, chiqim, balanslar)",
+          "responseExample": {
+            "totalIncome": {
+              "uzs": 10000000,
+              "usd": 50000
+            },
+            "totalExpense": {
+              "uzs": 5000000,
+              "usd": 20000
+            },
+            "totalBalance": {
+              "uzs": 5000000,
+              "usd": 30000
+            },
+            "regionCount": 15,
+            "orderCount": 250,
+            "activeOrderCount": 230,
+            "deletedOrderCount": 20
+          }
+        }
+      }
+    }
+  },
+  "dataTypes": {
+    "User": {
+      "id": "string (uuid)",
+      "username": "string (unique)",
+      "phone": "string (unique)",
+      "role": "'admin' | 'operator' | 'user'",
+      "created_at": "string (ISO 8601)",
+      "updated_at": "string (ISO 8601)"
+    },
+    "Order": {
+      "id": "string (uuid)",
+      "phone": "string (nullable)",
+      "currency": "'UZS' | 'USD'",
+      "amount": "number",
+      "is_income": "boolean",
+      "is_deleted": "boolean",
+      "region_id": "string (uuid)",
+      "created_at": "string (ISO 8601)",
+      "updated_at": "string (ISO 8601)",
+      "region": "Region (relation)"
+    },
+    "Region": {
+      "id": "string (uuid)",
+      "name": "string (unique)",
+      "balance_uzs": "number",
+      "balance_usd": "number",
+      "created_at": "string (ISO 8601)",
+      "updated_at": "string (ISO 8601)",
+      "orders": "Order[] (relation)"
+    },
+    "PaginationMeta": {
+      "total": "number - Jami yozuvlar soni",
+      "page": "number - Joriy sahifa",
+      "limit": "number - Sahifadagi yozuvlar soni",
+      "totalPages": "number - Jami sahifalar soni"
+    }
+  },
+  "codeExamples": {
+    "javascript": {
+      "setup": "// API Base URL\nconst API_BASE = 'http://localhost:3001';\n\n// Helper function\nasync function apiRequest(endpoint, options = {}) {\n  const token = localStorage.getItem('access_token');\n  const headers = {\n    'Content-Type': 'application/json',\n    ...(token && { Authorization: `Bearer ${token}` }),\n    ...options.headers\n  };\n\n  const response = await fetch(`${API_BASE}${endpoint}`, {\n    ...options,\n    headers\n  });\n\n  if (!response.ok) {\n    throw new Error(`HTTP ${response.status}: ${response.statusText}`);\n  }\n\n  return response.json();\n}",
+      "auth": {
+        "login": "// Login\nconst { access_token, refresh_token } = await apiRequest('/auth/login', {\n  method: 'POST',\n  body: JSON.stringify({\n    phone: '+998901234567',\n    password: 'password123'\n  })\n});\n\nlocalStorage.setItem('access_token', access_token);\nlocalStorage.setItem('refresh_token', refresh_token);",
+        "me": "// Get current user\nconst user = await apiRequest('/auth/me');",
+        "refresh": "// Refresh token\nconst refresh_token = localStorage.getItem('refresh_token');\nconst { access_token, refresh_token: newRefresh } = await apiRequest('/auth/refresh', {\n  method: 'POST',\n  body: JSON.stringify({ refresh_token })\n});\n\nlocalStorage.setItem('access_token', access_token);\nlocalStorage.setItem('refresh_token', newRefresh);"
+      },
+      "users": {
+        "register": "// Register user\nconst result = await apiRequest('/api/users/register', {\n  method: 'POST',\n  body: JSON.stringify({\n    username: 'john_doe',\n    phone: '+998901234567',\n    password: 'securePass123',\n    role: 'user',\n    secretKey: 'your-secret-key'\n  })\n});",
+        "getAll": "// Get all users\nconst users = await apiRequest('/api/users');",
+        "getOne": "// Get single user\nconst user = await apiRequest(`/api/users/${userId}`);",
+        "update": "// Update user\nconst updated = await apiRequest(`/api/users/${userId}`, {\n  method: 'PATCH',\n  body: JSON.stringify({\n    username: 'new_username',\n    role: 'operator'\n  })\n});",
+        "delete": "// Delete user\nconst result = await apiRequest(`/api/users/${userId}`, {\n  method: 'DELETE'\n});"
+      },
+      "orders": {
+        "create": "// Create order\nconst order = await apiRequest('/api/orders', {\n  method: 'POST',\n  body: JSON.stringify({\n    phone: '+998901234567',\n    currency: 'USD',\n    amount: 1000,\n    is_income: true,\n    region_id: 'region-uuid'\n  })\n});",
+        "getAll": "// Get orders with pagination\nconst { data, meta } = await apiRequest('/api/orders?page=1&limit=10');",
+        "getOne": "// Get single order\nconst order = await apiRequest(`/api/orders/${orderId}`);",
+        "update": "// Update order\nconst updated = await apiRequest(`/api/orders/${orderId}`, {\n  method: 'PUT',\n  body: JSON.stringify({\n    amount: 1500,\n    is_income: false\n  })\n});",
+        "delete": "// Soft delete order\nconst result = await apiRequest(`/api/orders/${orderId}`, {\n  method: 'DELETE'\n});"
+      },
+      "regions": {
+        "create": "// Create region\nconst region = await apiRequest('/api/regions', {\n  method: 'POST',\n  body: JSON.stringify({\n    name: 'Samarkand'\n  })\n});",
+        "getAll": "// Get regions with pagination\nconst { data, meta } = await apiRequest('/api/regions?page=1&limit=10');",
+        "getOne": "// Get single region\nconst region = await apiRequest(`/api/regions/${regionId}`);",
+        "update": "// Update region\nconst updated = await apiRequest(`/api/regions/${regionId}`, {\n  method: 'PUT',\n  body: JSON.stringify({\n    name: 'New Samarkand'\n  })\n});",
+        "delete": "// Delete region\nconst result = await apiRequest(`/api/regions/${regionId}`, {\n  method: 'DELETE'\n});"
+      },
+      "analytics": {
+        "global": "// Get global analytics\nconst stats = await apiRequest('/api/analytics/global');"
+      }
+    },
+    "axios": {
+      "setup": "import axios from 'axios';\n\n// Create axios instance\nconst api = axios.create({\n  baseURL: 'http://localhost:3001',\n  headers: {\n    'Content-Type': 'application/json'\n  }\n});\n\n// Request interceptor - add token\napi.interceptors.request.use((config) => {\n  const token = localStorage.getItem('access_token');\n  if (token) {\n    config.headers.Authorization = `Bearer ${token}`;\n  }\n  return config;\n});\n\n// Response interceptor - handle errors\napi.interceptors.response.use(\n  (response) => response,\n  async (error) => {\n    if (error.response?.status === 401) {\n      // Token expired, try refresh\n      const refreshToken = localStorage.getItem('refresh_token');\n      if (refreshToken) {\n        try {\n          const { data } = await axios.post('http://localhost:3001/auth/refresh', {\n            refresh_token: refreshToken\n          });\n          localStorage.setItem('access_token', data.access_token);\n          localStorage.setItem('refresh_token', data.refresh_token);\n          // Retry original request\n          error.config.headers.Authorization = `Bearer ${data.access_token}`;\n          return axios(error.config);\n        } catch (refreshError) {\n          // Refresh failed, logout\n          localStorage.clear();\n          window.location.href = '/login';\n        }\n      }\n    }\n    return Promise.reject(error);\n  }\n);\n\nexport default api;",
+      "usage": "// Import va ishlatish\nimport api from './api';\n\n// Login\nconst { data } = await api.post('/auth/login', {\n  phone: '+998901234567',\n  password: 'password123'\n});\n\n// Get users\nconst { data: users } = await api.get('/api/users');\n\n// Create order\nconst { data: order } = await api.post('/api/orders', {\n  currency: 'USD',\n  amount: 1000,\n  is_income: true,\n  region_id: 'uuid'\n});\n\n// Update region\nconst { data: region } = await api.put(`/api/regions/${id}`, {\n  name: 'New Name'\n});\n\n// Delete user\nconst { data: result } = await api.delete(`/api/users/${id}`);"
+    },
+    "react": {
+      "customHooks": "// hooks/useAuth.js\nimport { useState } from 'react';\nimport api from '../api';\n\nexport const useAuth = () => {\n  const [user, setUser] = useState(null);\n  const [loading, setLoading] = useState(false);\n\n  const login = async (phone, password) => {\n    setLoading(true);\n    try {\n      const { data } = await api.post('/auth/login', { phone, password });\n      localStorage.setItem('access_token', data.access_token);\n      localStorage.setItem('refresh_token', data.refresh_token);\n      const { data: userData } = await api.get('/auth/me');\n      setUser(userData);\n      return userData;\n    } finally {\n      setLoading(false);\n    }\n  };\n\n  const logout = () => {\n    localStorage.clear();\n    setUser(null);\n  };\n\n  return { user, loading, login, logout };\n};\n\n// hooks/useOrders.js\nimport { useState, useEffect } from 'react';\nimport api from '../api';\n\nexport const useOrders = (page = 1, limit = 10) => {\n  const [orders, setOrders] = useState([]);\n  const [meta, setMeta] = useState(null);\n  const [loading, setLoading] = useState(false);\n\n  const fetchOrders = async () => {\n    setLoading(true);\n    try {\n      const { data } = await api.get(`/api/orders?page=${page}&limit=${limit}`);\n      setOrders(data.data);\n      setMeta(data.meta);\n    } finally {\n      setLoading(false);\n    }\n  };\n\n  const createOrder = async (orderData) => {\n    const { data } = await api.post('/api/orders', orderData);\n    await fetchOrders();\n    return data;\n  };\n\n  const deleteOrder = async (id) => {\n    await api.delete(`/api/orders/${id}`);\n    await fetchOrders();\n  };\n\n  useEffect(() => {\n    fetchOrders();\n  }, [page, limit]);\n\n  return { orders, meta, loading, createOrder, deleteOrder, refetch: fetchOrders };\n};",
+      "components": "// components/OrderList.jsx\nimport React from 'react';\nimport { useOrders } from '../hooks/useOrders';\n\nconst OrderList = () => {\n  const { orders, meta, loading, deleteOrder } = useOrders(1, 10);\n\n  if (loading) return <div>Loading...</div>;\n\n  return (\n    <div>\n      <h2>Orders ({meta?.total})</h2>\n      <ul>\n        {orders.map(order => (\n          <li key={order.id}>\n            {order.currency} {order.amount} - {order.is_income ? 'Income' : 'Expense'}\n            <button onClick={() => deleteOrder(order.id)}>Delete</button>\n          </li>\n        ))}\n      </ul>\n      <div>Page {meta?.page} of {meta?.totalPages}</div>\n    </div>\n  );\n};"
+    },
+    "typescript": {
+      "types": "// types/api.ts\nexport type UserRole = 'admin' | 'operator' | 'user';\nexport type Currency = 'UZS' | 'USD';\n\nexport interface User {\n  id: string;\n  username: string;\n  phone: string;\n  role: UserRole;\n  created_at: string;\n  updated_at: string;\n}\n\nexport interface Order {\n  id: string;\n  phone: string | null;\n  currency: Currency;\n  amount: number;\n  is_income: boolean;\n  is_deleted: boolean;\n  region_id: string;\n  created_at: string;\n  updated_at: string;\n  region?: Region;\n}\n\nexport interface Region {\n  id: string;\n  name: string;\n  balance_uzs: number;\n  balance_usd: number;\n  created_at: string;\n  updated_at: string;\n  orders?: Order[];\n}\n\nexport interface PaginatedResponse<T> {\n  data: T[];\n  meta: {\n    total: number;\n    page: number;\n    limit: number;\n    totalPages: number;\n  };\n}\n\nexport interface AuthResponse {\n  access_token: string;\n  refresh_token: string;\n  user?: User;\n}\n\nexport interface CreateOrderDto {\n  phone?: string;\n  currency: Currency;\n  amount: number;\n  is_income: boolean;\n  region_id: string;\n}\n\nexport interface UpdateOrderDto {\n  phone?: string;\n  currency?: Currency;\n  amount?: number;\n  is_income?: boolean;\n  region_id?: string;\n}\n\nexport interface CreateRegionDto {\n  name: string;\n}\n\nexport interface UpdateRegionDto {\n  name: string;\n}\n\nexport interface RegisterUserDto {\n  username: string;\n  phone: string;\n  password: string;\n  role: UserRole;\n  secretKey: string;\n}\n\nexport interface UpdateUserDto {\n  username?: string;\n  phone?: string;\n  password?: string;\n  role?: UserRole;\n}",
+      "apiClient": "// api/client.ts\nimport axios, { AxiosInstance } from 'axios';\nimport type { User, Order, Region, PaginatedResponse, AuthResponse } from '../types/api';\n\nclass ApiClient {\n  private client: AxiosInstance;\n\n  constructor(baseURL: string) {\n    this.client = axios.create({\n      baseURL,\n      headers: { 'Content-Type': 'application/json' }\n    });\n\n    this.client.interceptors.request.use((config) => {\n      const token = localStorage.getItem('access_token');\n      if (token) {\n        config.headers.Authorization = `Bearer ${token}`;\n      }\n      return config;\n    });\n  }\n\n  // Auth\n  async login(phone: string, password: string): Promise<AuthResponse> {\n    const { data } = await this.client.post('/auth/login', { phone, password });\n    return data;\n  }\n\n  async me(): Promise<User> {\n    const { data } = await this.client.get('/auth/me');\n    return data;\n  }\n\n  // Users\n  async getUsers(): Promise<User[]> {\n    const { data } = await this.client.get('/api/users');\n    return data;\n  }\n\n  async getUser(id: string): Promise<User> {\n    const { data } = await this.client.get(`/api/users/${id}`);\n    return data;\n  }\n\n  async deleteUser(id: string): Promise<{ deleted: boolean }> {\n    const { data } = await this.client.delete(`/api/users/${id}`);\n    return data;\n  }\n\n  // Orders\n  async getOrders(page = 1, limit = 10): Promise<PaginatedResponse<Order>> {\n    const { data } = await this.client.get(`/api/orders?page=${page}&limit=${limit}`);\n    return data;\n  }\n\n  async createOrder(orderData: CreateOrderDto): Promise<Order> {\n    const { data } = await this.client.post('/api/orders', orderData);\n    return data;\n  }\n\n  async deleteOrder(id: string): Promise<Order> {\n    const { data } = await this.client.delete(`/api/orders/${id}`);\n    return data;\n  }\n\n  // Regions\n  async getRegions(page = 1, limit = 10): Promise<PaginatedResponse<Region>> {\n    const { data } = await this.client.get(`/api/regions?page=${page}&limit=${limit}`);\n    return data;\n  }\n\n  async createRegion(name: string): Promise<Region> {\n    const { data } = await this.client.post('/api/regions', { name });\n    return data;\n  }\n}\n\nexport const api = new ApiClient('http://localhost:3001');"
+    }
+  },
+  "errorHandling": {
+    "commonErrors": {
+      "400": "Bad Request - Invalid request body or parameters",
+      "401": "Unauthorized - Missing or invalid token",
+      "404": "Not Found - Resource not found",
+      "409": "Conflict - Duplicate entry (username, phone, region name)",
+      "500": "Internal Server Error - Server error"
+    },
+    "errorResponse": {
+      "statusCode": "number",
+      "message": "string | string[]",
+      "error": "string"
+    },
+    "example": "try {\n  const user = await api.get('/api/users/invalid-id');\n} catch (error) {\n  if (error.response) {\n    console.error('Status:', error.response.status);\n    console.error('Message:', error.response.data.message);\n  }\n}"
+  },
+  "bestPractices": {
+    "authentication": [
+      "Access token ni localStorage da saqlang",
+      "Token expired bo'lsa refresh token bilan yangilang",
+      "Logout qilganda barcha tokenlarni o'chiring",
+      "Har bir protected endpoint uchun Authorization header qo'shing"
+    ],
+    "pagination": [
+      "Default: page=1, limit=10",
+      "Query params orqali pagination qiling",
+      "Meta ma'lumotlaridan totalPages ni oling"
+    ],
+    "errorHandling": [
+      "Har doim try-catch ishlatilng",
+      "401 error da token refresh qiling",
+      "User-friendly error messages ko'rsating",
+      "Network errorlarni handle qiling"
+    ],
+    "performance": [
+      "Pagination ishlatilng (limit=10-50)",
+      "Kerakli ma'lumotlarni cache qiling",
+      "Debounce search inputlarni",
+      "Optimistic UI updates qiling"
+    ]
+  }
+}
