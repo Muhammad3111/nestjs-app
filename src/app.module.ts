@@ -10,6 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AnalyticsModule } from './analiytics/analiytics.module';
 import { CleanupModule } from './cleanup/cleanup.module';
+import { AppSettingModule } from './app-setting/app-setting.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CleanupModule } from './cleanup/cleanup.module';
     RegionsModule,
     OrdersModule,
     CleanupModule,
+    AppSettingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
