@@ -21,7 +21,7 @@ import { AppSettingModule } from './app-setting/app-setting.module';
         type: 'postgres',
         url: process.env.MONEYCHANGE_DB_URL,
         autoLoadEntities: true,
-        synchronize: process.env.NODE_ENV === 'development',
+        synchronize: true, // Temporarily enabled to create all tables
         logging: process.env.NODE_ENV === 'development',
       }),
     }),
