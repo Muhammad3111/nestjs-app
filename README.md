@@ -42,7 +42,6 @@
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete production deployment guide
 - **[API-COMPLETE.json](./API-COMPLETE.json)** - Full API documentation with examples
 - **[OPTIMIZATIONS.md](./OPTIMIZATIONS.md)** - Performance optimizations applied
-- **[README.deployment.md](./README.deployment.md)** - Deployment configuration details
 
 ## 🚀 Quick Start
 
@@ -132,19 +131,6 @@ docker-compose up -d
 # 3. Verify
 curl http://localhost:3001/api/analytics/global
 ```
-
-### Environment Variables
-
-Required environment variables:
-
-- `NODE_ENV` - Environment (development/production)
-- `PORT` - API port (default: 3001)
-- `MONEYCHANGE_DB_URL` - PostgreSQL connection string
-- `MONEYCHANGE_JWT_SECRET` - JWT signing secret (64+ chars)
-- `REGISTRATION_SECRET_DEFAULT` - User registration secret
-- `ALLOWED_ORIGINS` - CORS allowed origins (comma-separated)
-
-See `.env.example` for development and `.env.production.example` for production.
 
 ## 📡 API Endpoints
 

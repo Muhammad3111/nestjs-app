@@ -29,7 +29,6 @@ Quyidagi checklistdan foydalanib, production deploymentni to'g'ri bajarilganligi
 - [ ] `README.md` yangilangan
 - [ ] `DEPLOYMENT.md` yaratilgan
 - [ ] `API-COMPLETE.json` mavjud
-- [ ] `GITHUB-DEPLOYMENT-GUIDE.md` yaratilgan
 - [ ] Barcha endpoint lar dokumentatsiyalangan
 
 ---

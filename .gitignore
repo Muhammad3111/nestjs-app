@@ -37,11 +37,11 @@ lerna-debug.log*
 
 # dotenv environment variable files
 .env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-.env.production
+.env.*
+*.env
+*.env.*
+!.env.example
+!.env.*.example
 
 # Debug files (do not commit to git)
 DEBUG-*.md
