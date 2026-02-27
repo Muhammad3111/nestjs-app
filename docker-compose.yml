@@ -12,6 +12,8 @@ services:
     depends_on:
       moneychange_db:
         condition: service_healthy
+      moneychange_db_import:
+        condition: service_completed_successfully
     networks:
       - moneychange_net
     restart: 'no'
@@ -58,6 +60,21 @@ services:
       retries: 5
       start_period: 10s
     restart: unless-stopped
+    networks:
+      - moneychange_net
+
+  moneychange_db_import:
+    container_name: moneychange_db_import
+    image: ankane/pgvector:latest
+    env_file:
+      - .env
+    depends_on:
+      moneychange_db:
+        condition: service_healthy
+    volumes:
+      - .:/workspace:ro
+    command: sh /workspace/scripts/optional-dump-import.sh
+    restart: 'no'
     networks:
       - moneychange_net
 
